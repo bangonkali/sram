@@ -1,5 +1,14 @@
 `define period 10
-module i2c_slave (sda, scl, my_addr, curr_data);
+module i2c_slave (
+	sda, 
+	scl, 
+	my_addr, 
+	curr_data,
+	rcvd_addr,
+	state,
+	rcvd_mode
+);
+
 	inout sda;
 	input scl;
 
@@ -9,12 +18,12 @@ module i2c_slave (sda, scl, my_addr, curr_data);
 
 	input [6:0] my_addr;
 
-	reg [6:0] rcvd_addr;
+	output reg [6:0] rcvd_addr;
 	reg [7:0] rcvd_data;
-	reg rcvd_mode;
+	output reg rcvd_mode;
 
 	reg [2:0] counter;
-	reg [2:0] state;
+	output reg [2:0] state;
 	output reg [7:0] curr_data;
 
 	assign sda_in = sda;

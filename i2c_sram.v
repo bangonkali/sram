@@ -14,7 +14,10 @@ module i2c_sram (sda, scl, ce);
 		.sda(sda), 
 		.scl(scl), 
 		.my_addr(slave_addrs),
-		.curr_data(current_data)
+		.curr_data(current_data),
+		.rcvd_addr(rcvd_addr),
+		.state(state),
+		.rcvd_mode(rcvd_mode)
 	);
 	
 	sram u_sram(

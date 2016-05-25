@@ -19,6 +19,10 @@ module tb_i2c();
 	reg [6:0] slave_addrs [3:0];
 	reg [2:0] slave_sel;
 	reg [7:0] saved_data;
+	
+	wire [6:0] rcvd_addr [3:0];
+	wire rcvd_mode[3:0];
+	wire [2:0] state [3:0];
 
 	wire [7:0] curr_data1;
 	wire [7:0] curr_data2;
@@ -30,15 +34,15 @@ module tb_i2c();
 	wire [6:0] slave_address3;
 	wire [6:0] slave_address4;
 	
-	assign curr_data1 = curr_data[0];
-	assign curr_data2 = curr_data[1];
-	assign curr_data3 = curr_data[2];
-	assign curr_data4 = curr_data[3];
+	assign curr_data0 = curr_data[0];
+	assign curr_data1 = curr_data[1];
+	assign curr_data2 = curr_data[2];
+	assign curr_data3 = curr_data[3];
 	
-	assign slave_address1 = slave_addrs[0];
-	assign slave_address2 = slave_addrs[1];
-	assign slave_address3 = slave_addrs[2];
-	assign slave_address4 = slave_addrs[3];
+	assign slave_address0 = slave_addrs[0];
+	assign slave_address1 = slave_addrs[1];
+	assign slave_address2 = slave_addrs[2];
+	assign slave_address3 = slave_addrs[3];
 	
 	integer txn_no;
 
@@ -46,10 +50,10 @@ module tb_i2c();
 	tri1 sda;
 
 	i2c_mock_master uut_mock_master (.clock(clk), .start(start), .reset(reset), .write(write), .write_data(write_data), .read_data(read_data), .address(address), .ready(ready), .error(error), .sda(sda), .scl(scl));
-	i2c_slave s0 (sda, scl, slave_addrs[0], curr_data[0]);
-	i2c_slave s1 (sda, scl, slave_addrs[1], curr_data[1]);
-	i2c_slave s2 (sda, scl, slave_addrs[2], curr_data[2]);
-	i2c_slave s3 (sda, scl, slave_addrs[3], curr_data[3]);
+	i2c_slave s0 (.sda(sda), .scl(scl), .my_addr(slave_addrs[0]), .curr_data(curr_data[0]), .rcvd_addr(rcvd_addr[0]), .rcvd_mode(rcvd_mode[0]), .state(state[0]));
+	i2c_slave s1 (.sda(sda), .scl(scl), .my_addr(slave_addrs[1]), .curr_data(curr_data[1]), .rcvd_addr(rcvd_addr[1]), .rcvd_mode(rcvd_mode[1]), .state(state[1]));
+	i2c_slave s2 (.sda(sda), .scl(scl), .my_addr(slave_addrs[2]), .curr_data(curr_data[2]), .rcvd_addr(rcvd_addr[2]), .rcvd_mode(rcvd_mode[2]), .state(state[2]));
+	i2c_slave s3 (.sda(sda), .scl(scl), .my_addr(slave_addrs[3]), .curr_data(curr_data[3]), .rcvd_addr(rcvd_addr[3]), .rcvd_mode(rcvd_mode[3]), .state(state[3]));
 
 	always begin
 	#(`period/2)
