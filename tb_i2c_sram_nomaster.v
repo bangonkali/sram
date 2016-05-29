@@ -70,7 +70,7 @@ module tb_i2c_sram_nomaster();
 		master_begin_receive_part1();
 		master_begin_receive_part2();
 		master_nack_slave();
-		
+
 		//
 		#`period
 		#`period
@@ -164,13 +164,14 @@ module tb_i2c_sram_nomaster();
 			g = 0;
 			repeat (8) begin
 				#`period
-				memory_data_in[g] = sda_in;
-				$display("%d mast_counter: %d sda_in:%b", $time, g, sda_in);
-
 				#`period
+
 				scl = 1;
 
 				#`period
+
+				memory_data_in[g] <= sda_in;
+				$display("%d mast_counter: %d sda_in:%b", $time, g, sda_in);
 				scl = 0;
 
 				g = g + 1;

@@ -193,8 +193,8 @@ module i2c_sram_embedded (
 				address = curr_data;
         counter = 0; // prepare for sending first 8 bits of data
 				sda_is_slave_write = 1;
-        $display("%d sram_counter: %d\tsda_out:%b\tdata_read:%b\tdataread[c]:%b", $time, counter, sda_out, data_read, data_read[counter]);
-        sda_out = data_read[counter];
+        // $display("%d sram_counter: %d\tsda_out:%b\tdata_read:%b\tdataread[c]:%b", $time, counter, sda_out, data_read, data_read[counter]);
+        // sda_out = data_read[counter];
 				state = SRAM_READ_RETURN_VALUE_PART1;
 			end
 
