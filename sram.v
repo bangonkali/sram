@@ -2,7 +2,7 @@
 //-----------------------------------------------------
 // Design Name : ram_sp_ar_aw
 // File Name   : ram_sp_ar_aw.v
-// Function    : Asynchronous read write RAM 
+// Function    : Asynchronous read write RAM
 // Coder       : Deepak Kumar Tala
 // Source      : http://www.asic-world.com/code/hdl_models/ram_sp_ar_aw.v
 //-----------------------------------------------------
@@ -13,33 +13,33 @@ module sram (
 	chip_enable, // Chip Select (active low)
 	write_enable, // Write Enable/Read Enable (write on low)
 	output_enable, // Output Enable (active low)
-	reset 
-);          
+	reset
+);
 	parameter DATA_WIDTH = 16;
 	parameter ADDR_WIDTH = 8;
 	parameter RAM_DEPTH = 256;
 
-	//--------------Input Ports----------------------- 
+	//--------------Input Ports-----------------------
 	input [ADDR_WIDTH-1:0] address;
 	input chip_enable;
 	input write_enable;
-	input output_enable; 
+	input output_enable;
 	input reset;
 
-	//--------------Inout Ports----------------------- 
+	//--------------Inout Ports-----------------------
 	inout [DATA_WIDTH-1:0]  data       ;
 
-	//--------------Internal variables---------------- 
+	//--------------Internal variables----------------
 	reg [DATA_WIDTH-1:0]   data_out ;
 	reg [DATA_WIDTH-1:0] mem [0:RAM_DEPTH-1];
 
-	//--------------Code Starts Here------------------ 
+	//--------------Code Starts Here------------------
 
-	// Tri-State Buffer control 
+	// Tri-State Buffer control
 	// output : When write_enable = 0, output_enable = 1, chip_enable = 1
-	assign data = (!chip_enable && !output_enable && write_enable) ? data_out : 8'bz; 
+	assign data = (!chip_enable && !output_enable && write_enable) ? data_out : 16'bz;
 
-	// Memory Write Block 
+	// Memory Write Block
 	// Write Operation : When write_enable = 1, chip_enable = 1
 	always @ (address or data or chip_enable or write_enable)
 	begin : MEM_WRITE
@@ -48,7 +48,7 @@ module sram (
 	   end
 	end
 
-	// Memory Read Block 
+	// Memory Read Block
 	// Read Operation : When write_enable = 0, output_enable = 1, chip_enable = 1
 	always @ (address or chip_enable or write_enable or output_enable)
 	begin : MEM_READ
@@ -57,7 +57,7 @@ module sram (
 		end
 	end
 
-	always @ (posedge reset) begin 
+	always @ (posedge reset) begin
 		mem [0] = 16'b0;
 		mem [1] = 16'b0;
 		mem [2] = 16'b0;
@@ -182,7 +182,7 @@ module sram (
 		mem [121] = 16'b0;
 		mem [122] = 16'b0;
 		mem [123] = 16'b0;
-		mem [124] = 16'b0;
+		mem [124] = 16'b1011011111111000; // 01011100 / 01010101 = 31868
 		mem [125] = 16'b0;
 		mem [126] = 16'b0;
 		mem [127] = 16'b0;
@@ -314,6 +314,6 @@ module sram (
 		mem [253] = 16'b0;
 		mem [254] = 16'b0;
 		mem [255] = 16'b0;
-	end 
-	
+	end
+
 endmodule // End of Module ram_sp_ar_aw
