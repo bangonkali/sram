@@ -41,9 +41,9 @@ module sram (
 
 	// Memory Write Block
 	// Write Operation : When write_enable = 1, chip_enable = 1
-	always @ (address or data or chip_enable or write_enable)
+	always @ (address or data or chip_enable or write_enable or output_enable)
 	begin : MEM_WRITE
-	   if ( !chip_enable && !write_enable ) begin
+	   if ( !chip_enable && !write_enable && output_enable) begin
 		   mem[address] = data;
 	   end
 	end

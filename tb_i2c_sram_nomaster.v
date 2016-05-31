@@ -80,6 +80,11 @@ module tb_i2c_sram_nomaster();
 			8'b01111100
 		);
 
+		master_read_from_slave(
+			7'b0111100,
+			8'b01111100
+		);
+
 		$finish;
 	end
 
@@ -97,10 +102,12 @@ module tb_i2c_sram_nomaster();
 			#`period master_send_start();
 			master_send_address_and_mode();
 			master_send_memory_address();
-			$display("Begin receiving data.");
+			// $display("Begin receiving data.");
 			master_send_data_part1();
 			master_send_data_part2();
 			master_send_stop();
+
+			$display("W %d\t%d\t%d\t%d\t%d",$time, send_memory_address, tinput_send_data, u_sram.data_write, u_sram.U_SRAM.mem[send_memory_address]);
 		end
 	endtask
 
@@ -120,6 +127,8 @@ module tb_i2c_sram_nomaster();
 			master_begin_receive_part2();
 			master_nack_slave();
 			master_send_stop();
+
+			$display("R %d\t%d\t%d\t%d\t%d",$time, send_memory_address, memory_data_in, u_sram.data_read, u_sram.U_SRAM.mem[send_memory_address]);
 		end
 	endtask
 
@@ -199,10 +208,10 @@ module tb_i2c_sram_nomaster();
 
 		begin
 			is_ack = 0;
-			$display("Within master_begin_receive_part1()");
+			// $display("Within master_begin_receive_part1()");
 			// enable writing to sda
 			wren_sram = 0;
-			$display("wren disabled. Master lsitens to SDA.");
+			// $display("wren disabled. Master lsitens to SDA.");
 
 			g = 15;
 			repeat (8) begin
@@ -218,7 +227,7 @@ module tb_i2c_sram_nomaster();
 				#`period
 
 				memory_data_in[g] <= sda_in;
-				$display("%d mast_counter: %d sda_in:%b", $time, g, sda_in);
+				// $display("%d mast_counter: %d sda_in:%b", $time, g, sda_in);
 				scl = 0;
 
 				g = g - 1;
@@ -286,10 +295,10 @@ module tb_i2c_sram_nomaster();
 	task master_begin_receive_part2;
 		reg [3:0] g;
 		begin
-			$display("Within master_begin_receive_part1()");
+			// $display("Within master_begin_receive_part1()");
 			// enable writing to sda
 			wren_sram = 0;
-			$display("wren disabled. Master lsitens to SDA.");
+			// $display("wren disabled. Master lsitens to SDA.");
 
 			g = 7; // para dili mo tugdong ug negative one.
 			repeat (8) begin

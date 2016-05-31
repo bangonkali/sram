@@ -87,7 +87,7 @@ module i2c_sram_embedded (
 	assign do_enable_chip = !chip_enable;
 	assign do_read = output_enable;
 
-	assign data = (do_write && chip_enable && do_read) ? data_write : 'bz;
+	assign data = (do_write && do_enable_chip && do_read) ? data_write : 'bz;
 	assign data_read = data;
 
 	sram U_SRAM(
@@ -199,7 +199,7 @@ module i2c_sram_embedded (
 
 			SRAM_READ_RETURN_VALUE_PART1: begin
 
-				$display("%d\tCounter=%d\tdata_read[counter]=%d\tsda_out=%d",$time,counter,data_read[counter],sda_out);
+				// $display("%d\tCounter=%d\tdata_read[counter]=%d\tsda_out=%d",$time,counter,data_read[counter],sda_out);
 				counter <= counter - 1;
 				sda_out <= data_read[counter];
 				if (counter == 7) begin
@@ -216,7 +216,7 @@ module i2c_sram_embedded (
         sda_is_slave_write <= 1; // prepare for getting ack (readonly sda)
 				sda_out <= data_read[7];
 
-        $display("State=%d", SRAM_READ_RETURN_VALUE_PART1_GET_ACK);
+        // $display("State=%d", SRAM_READ_RETURN_VALUE_PART1_GET_ACK);
 				state <= SRAM_READ_RETURN_VALUE_PART2;
 			end
 
@@ -226,7 +226,7 @@ module i2c_sram_embedded (
 				sda_out <= data_read[counter];
 				counter <= counter - 1;
 
-        $display("sram_counter: %d\tsda_out:%b\tdata_read:%b\tdataread[c]:%b", counter, sda_out, data_read, data_read[counter]);
+        // $display("sram_counter: %d\tsda_out:%b\tdata_read:%b\tdataread[c]:%b", counter, sda_out, data_read, data_read[counter]);
 
 				if (counter == 0) begin
 					state <= SRAM_READ_RETURN_VALUE_PART2_GET_ACK;
@@ -262,9 +262,9 @@ module i2c_sram_embedded (
 				//#`period
 				// Prepare reading from SRAM
 
-				chip_enable <= 1; // turn off sram
+				chip_enable <= 0; // turn off sram
 				output_enable <= 1; // output is disable
-				write_enable <= 1;
+				write_enable <= 0;
 
 				// send out ack from slave to master
 				sda_is_slave_write <= 0;
