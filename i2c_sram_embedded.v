@@ -202,9 +202,10 @@ module i2c_sram_embedded (
 				$display("%d\tCounter=%d\tdata_read[counter]=%d\tsda_out=%d",$time,counter,data_read[counter],sda_out);
 				counter <= counter - 1;
 				sda_out <= data_read[counter];
-				if (counter == 8) begin
+				if (counter == 7) begin
 					state <= SRAM_READ_RETURN_VALUE_PART1_GET_ACK;
 					sda_is_slave_write <= 0;
+	        counter <= 6;
 				end else begin
 					sda_is_slave_write <= 1; // prepare for writing sda, write data
 				end
@@ -213,9 +214,9 @@ module i2c_sram_embedded (
 			SRAM_READ_RETURN_VALUE_PART1_GET_ACK : begin
 				// #`period
         sda_is_slave_write <= 1; // prepare for getting ack (readonly sda)
+				sda_out <= data_read[7];
 
         $display("State=%d", SRAM_READ_RETURN_VALUE_PART1_GET_ACK);
-        counter = 7;
 				state <= SRAM_READ_RETURN_VALUE_PART2;
 			end
 

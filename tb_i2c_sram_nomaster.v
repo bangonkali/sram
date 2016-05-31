@@ -195,7 +195,10 @@ module tb_i2c_sram_nomaster();
 
 	task master_begin_receive_part1;
 		reg [4:0] g;
+		reg is_ack;
+
 		begin
+			is_ack = 0;
 			$display("Within master_begin_receive_part1()");
 			// enable writing to sda
 			wren_sram = 0;
@@ -203,6 +206,10 @@ module tb_i2c_sram_nomaster();
 
 			g = 15;
 			repeat (8) begin
+				if (g == 8 && is_ack == 1) begin
+					wren_sram = 0; // enable writing to sda
+				end
+
 				#`period
 
 				#`period scl = 1;
@@ -216,15 +223,16 @@ module tb_i2c_sram_nomaster();
 
 				g = g - 1;
 
-				if (g==8) begin
+				if (g==8 && is_ack == 0) begin
 					// #`period
 					wren_sram = 1; // enable writing to sda
 					sda_to_sram =  0; // ack sda
+					is_ack = 1;
 				end
 
 			end
 
-			wren_sram = 0; // enable writing to sda
+
 			sda_to_sram =  0; // ack sda
 			#`period
 
