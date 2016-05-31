@@ -245,16 +245,16 @@ module i2c_sram_embedded (
 			end
 
 			SRAM_WRITE_GET_MEMORY_ADDRESS: begin
-				sda_is_slave_write <= 0;
-
 				if (counter == 0) begin
-					#`period
 					sda_out <= 0;
 					state <= SRAM_WRITE_GET_MEMORY_ADDRESS_PUT_ACK;
 					curr_data <= rcvd_data;
 					address <= rcvd_data; // received address goes to memory address param
-				end else
+					sda_is_slave_write <= 1;
+				end else begin
 					counter <= counter - 1;
+					sda_is_slave_write <= 0;
+				end
 			end
 
 			SRAM_WRITE_GET_MEMORY_ADDRESS_PUT_ACK: begin
@@ -266,7 +266,7 @@ module i2c_sram_embedded (
 				write_enable <= 1;
 
 				// send out ack from slave to master
-				sda_is_slave_write <= 1;
+				sda_is_slave_write <= 0;
 				sda_out <= 0;
 
 				counter <= 7; // prepare for sending first 8 bits of data
@@ -274,13 +274,13 @@ module i2c_sram_embedded (
 			end
 
 			SRAM_WRITE_GET_DATA_PART1: begin
-				sda_is_slave_write = 0;
 				if (counter == 0) begin
-					//#`period
 					state <= SRAM_WRITE_GET_DATA_PART1_PUT_ACK;
 					cache_data_write_p1 <= rcvd_data;
+					sda_is_slave_write <= 1;
 				end else begin
 					counter <= counter - 1;
+					sda_is_slave_write <= 0;
 				end
 			end
 
@@ -295,13 +295,13 @@ module i2c_sram_embedded (
 			end
 
 			SRAM_WRITE_GET_DATA_PART2: begin
-				sda_is_slave_write = 0;
 				if (counter == 0) begin
-					#`period
 					state <= SRAM_WRITE_GET_DATA_PART2_PUT_ACK;
 					cache_data_write_p2 <= rcvd_data;
+					sda_is_slave_write <= 1;
 				end else begin
 					counter <= counter - 1;
+					sda_is_slave_write <= 0;
 				end
 			end
 

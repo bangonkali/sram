@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 `define period 10
 
-// iverilog -o tb_i2c_sram_nomaster.vvp tb_i2c_sram_nomaster.v i2c_sram_embedded.v sram.v && vvp tb_i2c_sram_nomaster.vvp
+// iverilog -o tb_i2c_sram_nomaster.vvp tb_i2c_sram_nomaster.v i2c_sram_embedded.v sram.v && vvp tb_i2c_sram_nomaster.vvp && gtkwave.exe tb_i2c_sram_nomaster.v
 // Test the i2c_sram_embedded without using the master. Master behaviour is plotted in tb.
 module tb_i2c_sram_nomaster();
 	// sram pins
@@ -15,7 +15,7 @@ module tb_i2c_sram_nomaster();
 
 	// global pins
 	reg [32:0] i;
-
+	reg [32:0] b;
 	// global sda control
 	reg sda_to_sram;
 	reg wren_sram;
@@ -31,6 +31,7 @@ module tb_i2c_sram_nomaster();
 	reg[7:0] send_memory_address;
 	reg[6:0] send_device_address;
 	reg send_device_mode;
+	reg[15:0] send_data;
 
 	i2c_sram_embedded u_sram (
 		.sda(sda),
@@ -53,23 +54,19 @@ module tb_i2c_sram_nomaster();
 		my_addr = 7'b0111100;
 
 		// command master_to_start
-		#`period master_send_start();
 
-		// start sending address 20
-		send_device_address = 7'b0111100;
-		send_device_mode = 1; // 1 read
-		master_send_address_and_mode();
 
-		// send_memory_address = 8'b11001110;
-		// send_memory_address = 8'b11111111;
-		send_memory_address = 8'b01111100;
-		master_send_memory_address();
+		master_write_to_slave(
+			7'b0111100,
+			8'b01111100,
+			16'b0101000010010011
+		);
 
-		// begin receive sequence.
-		$display("Begin receiving data.");
-		master_begin_receive_part1();
-		master_begin_receive_part2();
-		master_nack_slave();
+		master_write_to_slave(
+			7'b0111100,
+			8'b01111100,
+			1234
+		);
 
 		//
 		#`period
@@ -82,6 +79,27 @@ module tb_i2c_sram_nomaster();
 
 		$finish;
 	end
+
+	task master_write_to_slave;
+		input reg[6:0] tinput_send_device_address;
+		input reg[7:0] tinput_send_memory_address;
+		input reg[15:0] tinput_send_data;
+
+		begin
+			send_device_address = tinput_send_device_address;
+			send_memory_address = tinput_send_memory_address;
+			send_data = tinput_send_data;
+			send_device_mode = 0;
+
+			#`period master_send_start();
+			master_send_address_and_mode();
+			master_send_memory_address();
+			$display("Begin receiving data.");
+			master_send_data_part1();
+			master_send_data_part2();
+			master_send_stop();
+		end
+	endtask
 
 	task master_send_address_and_mode;
 		begin
@@ -161,7 +179,7 @@ module tb_i2c_sram_nomaster();
 			wren_sram = 0;
 			$display("wren disabled. Master lsitens to SDA.");
 
-			g = 0;
+			g = 15;
 			repeat (8) begin
 				#`period
 				#`period
@@ -174,7 +192,7 @@ module tb_i2c_sram_nomaster();
 				$display("%d mast_counter: %d sda_in:%b", $time, g, sda_in);
 				scl = 0;
 
-				g = g + 1;
+				g = g - 1;
 
 			end
 
@@ -237,7 +255,7 @@ module tb_i2c_sram_nomaster();
 			wren_sram = 0;
 			$display("wren disabled. Master lsitens to SDA.");
 
-			g = 8; // para dili mo tugdong ug negative one.
+			g = 7; // para dili mo tugdong ug negative one.
 			repeat (8) begin
 				#`period
 				memory_data_in[g] = sda_in;
@@ -248,8 +266,75 @@ module tb_i2c_sram_nomaster();
 				#`period
 				scl = 0;
 
-				g = g + 1;
+				g = g - 1;
 			end
+		end
+	endtask
+
+	task master_send_data_part1;
+		begin
+			// enable writing to sda
+			wren_sram = 1;
+
+			// Send address
+			for (b=16; b>8; b=b-1) begin
+				#`period
+				sda_to_sram =  send_data[b-1];
+				#`period
+				scl = 1;
+				#`period
+				scl = 0;
+			end
+
+			wren_sram = 0;
+
+			#`period
+			sda_to_sram =  0; // regardless of previous mode.
+
+			#`period
+			scl = 1;
+
+
+			// moment where slave acknowledges
+
+			#`period
+			scl = 0;
+
+			// disable writing to sda
+
+		end
+	endtask
+
+	task master_send_data_part2;
+		begin
+			// enable writing to sda
+			wren_sram = 1;
+
+			// Send address
+			for (b=8; b>0; b=b-1) begin
+				#`period
+				sda_to_sram =  send_data[b-1];
+				#`period
+				scl = 1;
+				#`period
+				scl = 0;
+			end
+			wren_sram = 0;
+
+			#`period
+			sda_to_sram =  0; // regardless of previous mode.
+
+			#`period
+			scl = 1;
+
+
+			// moment where slave acknowledges
+
+			#`period
+			scl = 0;
+
+			// disable writing to sda
+
 		end
 	endtask
 
