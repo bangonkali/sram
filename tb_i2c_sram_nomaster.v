@@ -52,30 +52,21 @@ module tb_i2c_sram_nomaster();
 		#`period u_sram.reset <= 1;
 
 		my_addr = 7'b0111100;
-		send_device_address = 7'b0111100;
-		send_memory_address = 8'b01111100;
-		send_device_mode = 1; // 1 read
 
-		#`period master_send_start();
-		master_send_address_and_mode();
-		master_send_memory_address();
-		master_begin_receive_part1();
-		master_begin_receive_part2();
-		master_nack_slave();
-		master_send_stop();
-
-		#`period
-		#`period
-		#`period
-		#`period
-		#`period
-		#`period
-		$finish;
+		master_read_from_slave(
+			7'b0111100,
+			8'b01111100
+		);
 
 		master_write_to_slave(
 			7'b0111100,
 			8'b01111100,
 			16'b0101000010010011
+		);
+
+		master_read_from_slave(
+			7'b0111100,
+			8'b01111100
 		);
 
 		master_write_to_slave(
@@ -84,14 +75,10 @@ module tb_i2c_sram_nomaster();
 			1234
 		);
 
-		//
-		#`period
-		#`period
-		#`period
-		#`period
-		#`period
-		#`period
-		master_send_stop();
+		master_read_from_slave(
+			7'b0111100,
+			8'b01111100
+		);
 
 		$finish;
 	end
@@ -113,6 +100,25 @@ module tb_i2c_sram_nomaster();
 			$display("Begin receiving data.");
 			master_send_data_part1();
 			master_send_data_part2();
+			master_send_stop();
+		end
+	endtask
+
+	task master_read_from_slave;
+		input reg[6:0] tinput_send_device_address;
+		input reg[7:0] tinput_send_memory_address;
+
+		begin
+			send_device_address = tinput_send_device_address;
+			send_memory_address = tinput_send_memory_address;
+			send_device_mode = 1; // 1 read
+
+			#`period master_send_start();
+			master_send_address_and_mode();
+			master_send_memory_address();
+			master_begin_receive_part1();
+			master_begin_receive_part2();
+			master_nack_slave();
 			master_send_stop();
 		end
 	endtask
