@@ -187,30 +187,27 @@ module i2c_sram_embedded (
 			end
 
 			SRAM_READ_GET_MEMORY_ADDRESS_PUT_ACK: begin
-				// #`period
+				 #`period //old version
 				// Prepare reading from SRAM
-        $display("curr_data %d", curr_data);
+				sda_is_slave_write = 0;
 				address = curr_data;
-        counter = 0; // prepare for sending first 8 bits of data
-				sda_is_slave_write = 1;
-        // $display("%d sram_counter: %d\tsda_out:%b\tdata_read:%b\tdataread[c]:%b", $time, counter, sda_out, data_read, data_read[counter]);
-        // sda_out = data_read[counter];
+                counter = 15; // prepare for sending first 8 bits of data
+				sda_is_slave_write = 0;
 				state = SRAM_READ_RETURN_VALUE_PART1;
+				address = curr_data;
 			end
 
 			SRAM_READ_RETURN_VALUE_PART1: begin
-				// #`period
-        // #`period$display("State=%d", SRAM_READ_RETURN_VALUE_PART1_GET_ACK);
+				//sda_is_slave_write = 0; // prepare for getting ack (readonly sda)
+				// #`period //old version
 				sda_out = data_read[counter];
-        $display("%d sram_counter: %d\tsda_out:%b\tdata_read:%b\tdataread[c]:%b", $time, counter, sda_out, data_read, data_read[counter]);
-
-				counter = counter + 1;
-				if (counter >= 8) begin
+				counter = counter - 1;
+				if (counter == 8) begin
 					state <= SRAM_READ_RETURN_VALUE_PART1_GET_ACK;
-          sda_is_slave_write = 0; // prepare for getting ack (readonly sda)
+
 				end else begin
-          sda_is_slave_write <= 1; // prepare for writing sda, write data
-        end
+					sda_is_slave_write <= 1; // prepare for writing sda, write data
+				end
 			end
 
 			SRAM_READ_RETURN_VALUE_PART1_GET_ACK : begin
@@ -240,7 +237,7 @@ module i2c_sram_embedded (
 				sda_is_slave_write <= 0; // prepare for getting ack (readonly sda)
 				if (sda_out == 0) begin // looop again, increment address and send next first 8 bit of next 16 bits
 					address <= address + 1;
-					state <= SRAM_READ_RETURN_VALUE_PART1;
+					state <= STOP;
 					counter <= 15; // prepare for sending first 8 bits of data
 				end else begin // end comms
 					state <= STOP;
@@ -261,7 +258,7 @@ module i2c_sram_embedded (
 			end
 
 			SRAM_WRITE_GET_MEMORY_ADDRESS_PUT_ACK: begin
-				#`period
+				//#`period
 				// Prepare reading from SRAM
 
 				chip_enable <= 1; // turn off sram
@@ -279,7 +276,7 @@ module i2c_sram_embedded (
 			SRAM_WRITE_GET_DATA_PART1: begin
 				sda_is_slave_write = 0;
 				if (counter == 0) begin
-					#`period
+					//#`period
 					state <= SRAM_WRITE_GET_DATA_PART1_PUT_ACK;
 					cache_data_write_p1 <= rcvd_data;
 				end else begin
@@ -288,9 +285,9 @@ module i2c_sram_embedded (
 			end
 
 			SRAM_WRITE_GET_DATA_PART1_PUT_ACK: begin
-				#`period
+				//#`period
 				// send out ack from slave to master
-				sda_is_slave_write <= 1;
+				sda_is_slave_write <= 0; //cheat
 				sda_out <= 0;
 
 				counter <= 7; // prepare for sending first 8 bits of data
@@ -311,11 +308,11 @@ module i2c_sram_embedded (
 			SRAM_WRITE_GET_DATA_PART2_PUT_ACK: begin
 				#`period
 				// send out ack from slave to master
-				sda_is_slave_write <= 1;
+				sda_is_slave_write <= 0; //cheat
 				sda_out <= 0;
 
 				counter <= 7; // prepare for sending first 8 bits of data
-				state <= SRAM_READ_RETURN_VALUE_PART1;
+				state <= STOP;
 
 				// do the writing to memory
 				data_write <= {cache_data_write_p1, cache_data_write_p2};
