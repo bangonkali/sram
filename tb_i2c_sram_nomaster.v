@@ -52,9 +52,25 @@ module tb_i2c_sram_nomaster();
 		#`period u_sram.reset <= 1;
 
 		my_addr = 7'b0111100;
+		send_device_address = 7'b0111100;
+		send_memory_address = 8'b01111100;
+		send_device_mode = 1; // 1 read
 
-		// command master_to_start
+		#`period master_send_start();
+		master_send_address_and_mode();
+		master_send_memory_address();
+		master_begin_receive_part1();
+		master_begin_receive_part2();
+		master_nack_slave();
+		master_send_stop();
 
+		#`period
+		#`period
+		#`period
+		#`period
+		#`period
+		#`period
+		$finish;
 
 		master_write_to_slave(
 			7'b0111100,
@@ -182,8 +198,8 @@ module tb_i2c_sram_nomaster();
 			g = 15;
 			repeat (8) begin
 				#`period
-				#`period
 
+				#`period scl = 1;
 				scl = 1;
 
 				#`period
@@ -194,11 +210,17 @@ module tb_i2c_sram_nomaster();
 
 				g = g - 1;
 
+				if (g==8) begin
+					// #`period
+					wren_sram = 1; // enable writing to sda
+					sda_to_sram =  0; // ack sda
+				end
+
 			end
 
-			#`period
-			wren_sram = 1; // enable writing to sda
+			wren_sram = 0; // enable writing to sda
 			sda_to_sram =  0; // ack sda
+			#`period
 
 			#`period
 			scl = 1;
@@ -293,7 +315,6 @@ module tb_i2c_sram_nomaster();
 
 			#`period
 			scl = 1;
-
 
 			// moment where slave acknowledges
 

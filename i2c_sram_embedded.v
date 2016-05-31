@@ -187,24 +187,24 @@ module i2c_sram_embedded (
 			end
 
 			SRAM_READ_GET_MEMORY_ADDRESS_PUT_ACK: begin
-				 #`period //old version
-				// Prepare reading from SRAM
-				sda_is_slave_write = 0;
-				address = curr_data;
-                counter = 15; // prepare for sending first 8 bits of data
-				sda_is_slave_write = 0;
-				state = SRAM_READ_RETURN_VALUE_PART1;
-				address = curr_data;
+				//  #`period //old version
+				sda_is_slave_write <= 1;
+				address <= curr_data;
+				counter <= 14; // prepare for sending first 8 bits of data
+				state <= SRAM_READ_RETURN_VALUE_PART1;
+				address <= curr_data;
+
+				sda_out <= data_read[15];
 			end
 
 			SRAM_READ_RETURN_VALUE_PART1: begin
-				//sda_is_slave_write = 0; // prepare for getting ack (readonly sda)
-				// #`period //old version
-				sda_out = data_read[counter];
-				counter = counter - 1;
+
+				$display("%d\tCounter=%d\tdata_read[counter]=%d\tsda_out=%d",$time,counter,data_read[counter],sda_out);
+				counter <= counter - 1;
+				sda_out <= data_read[counter];
 				if (counter == 8) begin
 					state <= SRAM_READ_RETURN_VALUE_PART1_GET_ACK;
-
+					sda_is_slave_write <= 0;
 				end else begin
 					sda_is_slave_write <= 1; // prepare for writing sda, write data
 				end
@@ -212,7 +212,7 @@ module i2c_sram_embedded (
 
 			SRAM_READ_RETURN_VALUE_PART1_GET_ACK : begin
 				// #`period
-        sda_is_slave_write = 0; // prepare for getting ack (readonly sda)
+        sda_is_slave_write <= 1; // prepare for getting ack (readonly sda)
 
         $display("State=%d", SRAM_READ_RETURN_VALUE_PART1_GET_ACK);
         counter = 7;
@@ -223,11 +223,11 @@ module i2c_sram_embedded (
 				// #`period
 				sda_is_slave_write <= 1; // prepare for writing sda, write data
 				sda_out <= data_read[counter];
-				counter <= counter + 1;
+				counter <= counter - 1;
 
         $display("sram_counter: %d\tsda_out:%b\tdata_read:%b\tdataread[c]:%b", counter, sda_out, data_read, data_read[counter]);
 
-				if (counter == 15) begin
+				if (counter == 0) begin
 					state <= SRAM_READ_RETURN_VALUE_PART2_GET_ACK;
 				end
 			end
