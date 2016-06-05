@@ -53,40 +53,84 @@ module tb_i2c_sram_nomaster();
 
 		my_addr = 7'b0111100;
 
+		//master_write_to_read(
+			//7'b0111100,
+			//8'd50,
+			//16'd2203
+
+		//);
+
+
+
+		//master_read_from_slave(
+		//	7'b0111100,
+			//8'd102
+		//);
+
+		//master_read_from_slave(
+			//7'b0111100,
+			//8'd186
+		//);
+
+		//master_read_from_slave(
+			//7'b0111100,
+			//8'd233
+		//);
+
+		//master_write_to_slave(
+			//7'b0111100,
+			//8'd50,
+			//16'd2203
+		//);
+
 		master_read_from_slave(
 			7'b0111100,
-			8'b01111100
+			8'd50
 		);
 
-		master_write_to_slave(
-			7'b0111100,
-			8'b01111100,
-			16'b0101000010010011
-		);
 
-		master_read_from_slave(
-			7'b0111100,
-			8'b01111100
-		);
 
-		master_write_to_slave(
-			7'b0111100,
-			8'b01111100,
-			1234
-		);
+		//master_write_to_slave(
+			//7'b0111100,
+			//8'd102,
+			//16'd5724
+		//);
 
-		master_read_from_slave(
-			7'b0111100,
-			8'b01111100
-		);
+		//master_write_to_slave(
+			//7'b0111100,
+			//8'd186,
+			//16'd1234
+		//);
 
-		master_read_from_slave(
-			7'b0111100,
-			8'b01111100
-		);
+		//master_write_to_slave(
+			//7'b0111100,
+			//8'd233,
+			//16'd1067
+		//);
+
+		//master_read_from_slave(
+			//7'b0111100,
+			//8'd50
+		//);
+
+		//master_read_from_slave(
+			//7'b0111100,
+			//8'd102
+		//);
+
+		///master_read_from_slave(
+			//7'b0111100,
+			//8'd186
+		//);
+
+		//master_read_from_slave(
+			//7'b0111100,
+			//8'd233
+		//);
 
 		$finish;
 	end
+
 
 	task master_write_to_slave;
 		input reg[6:0] tinput_send_device_address;
@@ -118,11 +162,18 @@ module tb_i2c_sram_nomaster();
 		begin
 			send_device_address = tinput_send_device_address;
 			send_memory_address = tinput_send_memory_address;
-			send_device_mode = 1; // 1 read
-
+			
 			#`period master_send_start();
+
+			send_device_mode = 0; // 1 read
 			master_send_address_and_mode();
+
 			master_send_memory_address();
+
+		 	master_send_start();
+			send_device_mode = 1; // 1 read
+			master_send_address_and_mode();
+
 			master_begin_receive_part1();
 			master_begin_receive_part2();
 			master_nack_slave();
@@ -134,9 +185,6 @@ module tb_i2c_sram_nomaster();
 
 	task master_send_address_and_mode;
 		begin
-			// enable writing to sda
-			wren_sram = 1;
-
 			// Send address
 			for (i=7; i>0; i=i-1) begin
 				#`period
@@ -154,25 +202,29 @@ module tb_i2c_sram_nomaster();
 			scl = 1;
 			#`period
 			scl = 0;
-
+			wren_sram = 0;
 			#`period
 			sda_to_sram =  0; // regardless of previous mode.
 
 			#`period
 			scl = 1;
-
+			wren_sram = 0;
 			#`period
 			scl = 0;
 
 			// disable writing to sda
-			wren_sram = 0;
+			wren_sram = 1;
+
 		end
 	endtask
 
 	task master_send_memory_address;
+
 		begin
 			// enable writing to sda
-			wren_sram = 1;
+			if(i==8)begin
+			wren_sram = 1;// enable writing to sda
+			end
 
 			// Send address
 			for (i=8; i>0; i=i-1) begin
@@ -234,14 +286,14 @@ module tb_i2c_sram_nomaster();
 
 				if (g==8 && is_ack == 0) begin
 					// #`period
-					wren_sram = 1; // enable writing to sda
+					 // enable writing to sda
 					sda_to_sram =  0; // ack sda
 					is_ack = 1;
 				end
 
 			end
 
-
+			wren_sram = 1;
 			sda_to_sram =  0; // ack sda
 			#`period
 
@@ -270,7 +322,7 @@ module tb_i2c_sram_nomaster();
 				scl = 0;
 
 				// disable writing to sda
-				wren_sram = 0;
+				wren_sram = 1;
 		end
 	endtask
 
@@ -294,10 +346,11 @@ module tb_i2c_sram_nomaster();
 
 	task master_begin_receive_part2;
 		reg [3:0] g;
+
 		begin
+			wren_sram = 0;
 			// $display("Within master_begin_receive_part1()");
 			// enable writing to sda
-			wren_sram = 0;
 			// $display("wren disabled. Master lsitens to SDA.");
 
 			g = 7; // para dili mo tugdong ug negative one.
@@ -312,8 +365,15 @@ module tb_i2c_sram_nomaster();
 				scl = 0;
 
 				g = g - 1;
+
+				end
+				if(g==0)begin
+				wren_sram = 1;
+
 			end
+
 		end
+
 	endtask
 
 	task master_send_data_part1;

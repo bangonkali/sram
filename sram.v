@@ -37,7 +37,7 @@ module sram (
 
 	// Tri-State Buffer control
 	// output : When write_enable = 0, output_enable = 1, chip_enable = 1
-	assign data = (!chip_enable && !output_enable && write_enable) ? data_out : 16'bz;
+	assign data = (!output_enable && write_enable) ? data_out : 16'bz;
 
 	// Memory Write Block
 	// Write Operation : When write_enable = 1, chip_enable = 1
@@ -108,7 +108,7 @@ module sram (
 		mem [47] = 16'b0;
 		mem [48] = 16'b0;
 		mem [49] = 16'b0;
-		mem [50] = 16'b0;
+		mem [50] = 16'd115;
 		mem [51] = 16'b0;
 		mem [52] = 16'b0;
 		mem [53] = 16'b0;
